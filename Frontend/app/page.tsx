@@ -5,7 +5,7 @@ import  Sidebar from "@/components/Sidebar";
 import PromptBox from "@/components/PromptBox";
 import Message from "@/components/Message"; 
 import Image from "next/image"; 
-import { useState } from "react"; 
+import { useState, useEffect } from "react"; 
 
 type Role = "user" | "ai"; 
 
@@ -19,6 +19,26 @@ export default function Home() {
   const [expand, setExpand] = useState<boolean>(false);  
   const [messages, setMessages] = useState<ChatMessage[]>([]); 
   const [isLoading, setIsLoading] = useState<boolean>(false); 
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const res = await fetch("/api/chat/messages");
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data.map((msg: { id: number; role: string; content: string }) => ({
+            id: msg.id.toString(),
+            role: msg.role as "user" | "ai",
+            content: msg.content
+          })));
+        }
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    };
+
+    loadMessages();
+  }, []); 
 
   return (
       <div className="flex h-screen">
