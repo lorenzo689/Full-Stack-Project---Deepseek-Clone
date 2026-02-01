@@ -4,28 +4,82 @@ import { assets } from '@/assets/assets';
 import Image from "next/image"; 
 import React, { useState } from 'react'; 
 
-type PromptBoxProps = {
-    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>; 
-    isLoading: boolean; 
+type Role = "user" | "ai"; 
+
+type ChatMessage = {
+    id: string; 
+    role: Role; 
+    content: string; 
 }; 
 
-    const PromptBox: React.FC<PromptBoxProps> = ({ setIsLoading, isLoading }) => {
-        const [prompt, setPrompt] = useState<string>(''); 
+type PromptBoxProps = {
+    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>; 
+    isLoading: boolean;
+    setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>; 
+}; 
 
-        const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-            setPrompt(e.target.value); 
+    const PromptBox: React.FC<PromptBoxProps> = ({ 
+        setIsLoading,
+        isLoading,  
+        setMessages 
+    }) => {
+        const [prompt, setPrompt] = useState(""); 
+
+        const sendMessage = async () => {
+            const content = prompt.trim(); 
+            if (!content || isLoading) return;
+
+        const userMsg: ChatMessage = {
+            id: crypto.randomUUID(), 
+            role: "user",
+            content
         }; 
 
-        const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
+           setMessages(prev => [...prev, userMsg]); 
+           setPrompt(""); 
+           setIsLoading(true); 
 
-            if (!prompt.trim() || isLoading) return; 
+           try {
+            const res = await fetch("/api/chat/send", {
+                method: "POST", 
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content })
+            }); 
 
-            setIsLoading(true); 
+            if (!res.ok) {
+                const text = await res.text(); 
+                throw new Error(`API Error ${res.status}: ${text}`); 
+            }; 
 
-            // Erinnerung an mich hier muss später API call rein
+            const data = await res.json(); 
 
+            setMessages(prev => [...prev, {
+                id: crypto.randomUUID(), 
+                role: "ai", 
+                content: data.reply
+            }]); 
+
+           } catch(error) {
+
+            console.log(error); 
+
+            setMessages(prev => [...prev, {
+                id: crypto.randomUUID(), 
+                role: "ai", 
+                content: "Fehler: Backend nicht erreichbar."
+            }]); 
+
+           } finally {
+
+            setIsLoading(false); 
+
+           }; 
         };  
+
+        const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault(); 
+            sendMessage(); 
+        }; 
     
 
   return (
@@ -35,7 +89,16 @@ type PromptBoxProps = {
         <textarea
         className='outline-none w-full resize-none overflow-hidden wrap-break-word bg-transparent'
         rows={2}
-        placeholder='Message DeepSeek' required onChange={handleChange} value={prompt}/>
+        placeholder='Message DeepSeek' 
+        required 
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault(); 
+                sendMessage(); 
+                }; 
+            }}/>
 
         <div className='flex items-center justify-between text-sm'>
             <div className='flex items-center gap-2'>
@@ -72,3 +135,5 @@ type PromptBoxProps = {
 }; 
 
 export default PromptBox
+
+

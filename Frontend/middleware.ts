@@ -1,6 +1,15 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-export const proxy = clerkMiddleware();
+const isPublicRoute = createRouteMatcher([
+  "/", 
+  "/api/chat(.*)",
+]); 
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isPublicRoute(req)) return;
+
+  await auth.protect();
+});
 
 export const config = {
   matcher: [
