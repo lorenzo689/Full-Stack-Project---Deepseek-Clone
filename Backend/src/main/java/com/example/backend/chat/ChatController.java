@@ -33,7 +33,7 @@ public class ChatController {
         user.setContent(req.content()); 
         repo.save(user); 
 
-        String reply = "Ok, Ich hab verstanden: " + req.content(); 
+        String reply = "Erel Hund"; 
 
         ChatMessage ai = new ChatMessage(); 
         ai.setRole("ai"); 
