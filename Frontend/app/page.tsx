@@ -5,7 +5,7 @@ import  Sidebar from "@/components/Sidebar";
 import PromptBox from "@/components/PromptBox";
 import Message from "@/components/Message"; 
 import Image from "next/image"; 
-import { useState, useEffect } from "react"; 
+import { useState, useEffect, useRef } from "react"; 
 
 type Role = "user" | "ai"; 
 
@@ -19,6 +19,15 @@ export default function Home() {
   const [expand, setExpand] = useState<boolean>(false);  
   const [messages, setMessages] = useState<ChatMessage[]>([]); 
   const [isLoading, setIsLoading] = useState<boolean>(false); 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -67,12 +76,18 @@ export default function Home() {
             {messages.map((m) => (
               <Message key={m.id} role={m.role} content={m.content} />
             ))}
+            <div ref={messagesEndRef} />
           </div>
         )}
 
         <PromptBox isLoading={isLoading} 
                 setIsLoading={setIsLoading} 
                  setMessages={setMessages}/>
+        {isLoading && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 text-gray-400 text-sm">
+            <span className="animate-pulse">DeepSeek is thinking...</span>
+          </div>
+        )}
         <p className="text-xs absolute bottom-1 text-gray-500">AI generated, for reference only</p>
 
         </div>

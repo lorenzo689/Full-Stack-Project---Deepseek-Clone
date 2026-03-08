@@ -1,4 +1,5 @@
 package com.example.backend.chat; 
+import com.example.backend.deepseek.DeepSeekService;
 import jakarta.validation.constraints.NotBlank; 
 import org.springframework.web.bind.annotation.*; 
 import java.util.List; 
@@ -7,10 +8,12 @@ import java.util.List;
 @RequestMapping("/api/chat")
 public class ChatController {
     private final ChatMessageRepo repo; 
+    private final DeepSeekService deepSeekService;
 
-    public ChatController(ChatMessageRepo repo) {
+    public ChatController(ChatMessageRepo repo, DeepSeekService deepSeekService) {
         this.repo = repo; 
-    }; 
+        this.deepSeekService = deepSeekService;
+    };
 
     record SendRequest(@NotBlank String content) {
 
@@ -33,7 +36,7 @@ public class ChatController {
         user.setContent(req.content()); 
         repo.save(user); 
 
-        String reply = "Erel Hund"; 
+        String reply = deepSeekService.chat(req.content());
 
         ChatMessage ai = new ChatMessage(); 
         ai.setRole("ai"); 
@@ -41,5 +44,5 @@ public class ChatController {
         repo.save(ai); 
 
         return new SendResponse(reply); 
-    }; 
+    };
 }; 

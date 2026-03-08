@@ -2,7 +2,7 @@
 
 import { assets } from '@/assets/assets'; 
 import Image from "next/image"; 
-import React, { useState } from 'react'; 
+import React, { useState, useRef, useEffect } from 'react'; 
 
 type Role = "user" | "ai"; 
 
@@ -24,6 +24,14 @@ type PromptBoxProps = {
         setMessages 
     }) => {
         const [prompt, setPrompt] = useState(""); 
+        const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+        useEffect(() => {
+            if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto';
+                textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+            }
+        }, [prompt]);
 
         const sendMessage = async () => {
             const content = prompt.trim(); 
@@ -61,13 +69,13 @@ type PromptBoxProps = {
 
            } catch(error) {
 
-            console.log(error); 
+             console.error("Failed to send message:", error); 
 
-            setMessages(prev => [...prev, {
-                id: crypto.randomUUID(), 
-                role: "ai", 
-                content: "Fehler: Backend nicht erreichbar."
-            }]); 
+             setMessages(prev => [...prev, {
+                 id: crypto.randomUUID(), 
+                 role: "ai", 
+                 content: "Sorry, I couldn't get a response. Please try again."
+             }]); 
 
            } finally {
 
@@ -87,6 +95,7 @@ type PromptBoxProps = {
         className={`w-full max-w-2xl bg-[#404045] p-4 rounded-3xl mt-4 transition-all`}>
         
         <textarea
+        ref={textareaRef}
         className='outline-none w-full resize-none overflow-hidden wrap-break-word bg-transparent'
         rows={2}
         placeholder='Message DeepSeek' 

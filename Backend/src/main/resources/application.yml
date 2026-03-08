@@ -15,6 +15,14 @@ spring:
   flyway:
     enabled: true
 
+deepseek:
+  api:
+    url: https://api.deepseek.com/v1/chat/completions
+    key: ${DEEPSEEK_API_KEY:}
+
+cors:
+  allowed-origins: http://localhost:3000
+
 logging:
   level:
     org.hibernate.SQL: debug
